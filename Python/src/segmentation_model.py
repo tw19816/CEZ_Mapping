@@ -237,15 +237,3 @@ def deeplabv3plus(
     # Create full model
     model = tf.keras.Model(img_input, out_decode)
     return model
-
-
-
-
-model = tf.keras.applications.Xception(include_top=False)
-# class Conv(tf.keras.tf.keras.layers.Layer):
-#     """A Xception convolutional layer with batch normalisation and ReLU activation
-#     """
-# create modified xception for backbone
-# create decoder layer with two inputs (low and high level feature maps)
-# create combined model from modified xception and decoder layer \
-exit()
