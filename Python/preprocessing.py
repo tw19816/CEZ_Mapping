@@ -2,7 +2,7 @@ import os
 import numpy as np
 
 
-def get_label_pixel_maps(path_to_labelmap: str) -> tuple:
+def get_label_pixel_maps(path_to_labelmap: str) -> tuple[dict, dict]:
     """Create a map of labels to pixel values and inverse map from labelmap.txt
     file.
     
@@ -31,7 +31,7 @@ def get_label_pixel_maps(path_to_labelmap: str) -> tuple:
 
 def get_rgb_index_maps(
     path_to_rgb_labelmap: str, path_to_index_labelmap: str
-) -> tuple:
+) -> tuple[dict, dict]:
     """Create a map from rgb values to geyscale index and inverse map from 
     labelmap.txt files.
     
@@ -60,3 +60,4 @@ def get_rgb_index_maps(
         rgb = np.array(label_to_rgb.get(label).split(","), dtype=int)
         index_to_rgb[int(index)] = rgb
     return rgb_to_index, index_to_rgb
+
