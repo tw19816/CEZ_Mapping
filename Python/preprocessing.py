@@ -31,7 +31,7 @@ def get_label_pixel_maps(path_to_labelmap: str) -> tuple[dict, dict]:
 
 def get_rgb_index_maps(
     path_to_rgb_labelmap: str, path_to_index_labelmap: str
-) -> tuple[dict, dict]:
+) -> tuple:
     """Create a map from rgb values to geyscale index and inverse map from 
     labelmap.txt files.
     
@@ -60,4 +60,3 @@ def get_rgb_index_maps(
         rgb = np.array(label_to_rgb.get(label).split(","), dtype=int)
         index_to_rgb[int(index)] = rgb
     return rgb_to_index, index_to_rgb
-

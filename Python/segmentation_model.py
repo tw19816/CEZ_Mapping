@@ -4,6 +4,7 @@ from Python.aspp import ASPP
 def deeplabv3plus(
     input_shape: tuple,
     batch_size: int,
+    out_channels: int,
     channels_low: int = 48,
     channels_high: int = 2048,
     middle_repeat: int = 16
@@ -20,6 +21,7 @@ def deeplabv3plus(
             dimensions of the input tensor in terms of x, y, channels 
             respectively.
         batch_size (int) : Number of inputs per batch.
+        out_channels (int) : Number of output channels.
         channels_low (int) : Number of channels to down-sample low level
             features to before combining with high-level features in decoder.
         channels_high (int) : Number of channels to down-sample high level 
@@ -33,6 +35,7 @@ def deeplabv3plus(
     """
     # Entry flow
     img_input = tf.keras.Input(shape=input_shape, batch_size=batch_size)
+    # img_input = tf.keras.Input(shape=input_shape)
     x = tf.keras.layers.Conv2D(
         32,
         (3, 3),
@@ -215,9 +218,8 @@ def deeplabv3plus(
         channels_low,
         (1, 1),
         strides=(1, 1),
-        padding="same",
         activation="relu",
-        use_bias=False,
+        use_bias=True,
         name="dec_convl_low"
     )(out_low)
 
@@ -257,6 +259,16 @@ def deeplabv3plus(
     out_decode = tf.keras.layers.BatchNormalization(name="dec1_conv2_bn")(out_decode)
 
     out_decode = tf.keras.layers.Activation("relu", name="dec1_conv2_act")(out_decode)
+
+    out_decode = tf.keras.layers.Conv2D(
+        out_channels, (1, 1), use_bias=False, name="dec1_output"
+    )(out_decode)
+    out_decode = tf.keras.layers.Resizing(
+        input_shape[1],
+        input_shape[1],
+        interpolation="bilinear",
+        crop_to_aspect_ratio=False
+    )(out_decode)
 
     # Create full model
     model = tf.keras.Model(img_input, out_decode)
