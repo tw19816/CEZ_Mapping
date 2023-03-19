@@ -1,18 +1,39 @@
 import sys
 import tensorflow as tf
 import numpy as np
+from functools import reduce
+from Python.config import Config
+
+
+def get_weights(seg_array: np.ndarray) -> np.ndarray:
+    unique, counts = np.unique(seg_array, return_counts=True)
+    multiply = lambda x, y : x * y
+    n_pixels = reduce(multiply, seg_array.shape)
+    n_categories = len(unique)
+    category_weights = n_pixels / (n_categories * counts)
+    background_index = np.nonzero(unique == Config.background_label)
+    category_weights[background_index] = 0
+    weight_array = np.zeros(seg_array.shape, dtype=np.float32)
+    for key, value in zip(unique, category_weights):
+        weight_array[seg_array == key] = value
+    return weight_array
+
 
 def create_dataset(
     image_array: np.ndarray,
     seg_array: np.ndarray,
+    weight_array: np.ndarray = np.array([None, None]),
     normalise_images: bool = True
 ) -> tf.data.Dataset:
     """Create a normalised dataset from image and segmentation mask arrays.
     
     Args:
-        image_array (np.ndarray) : Array of images in order image, row, column, pixel.
+        image_array (np.ndarray) : Array of images in order image, row, 
+            column, pixel.
         seg_array (np.ndarray) : Array of segmentation masks in order mask, 
             row, column, pixel.
+        weight_array (np.ndarray | bool) : Array of values that weight the 
+            segmentation mask.
         normalise_images (bool) : Set to true to normalise pixel values from 
             (0, 255) to (0, 1).
     
@@ -29,9 +50,17 @@ def create_dataset(
 
     if normalise_images:
         image_array = image_array / 255
-    dataset = tf.data.Dataset.from_tensor_slices(
-        (image_array, seg_array), name="dataset"
-    )
+    image_array = image_array.astype(np.float32)
+    seg_array = seg_array.astype(np.float32)
+    if (weight_array != None).any():
+        weight_array = weight_array.astype(np.float32)
+        dataset = tf.data.Dataset.from_tensor_slices(
+            (image_array, seg_array, weight_array), name="dataset"
+        )
+    else: 
+        dataset = tf.data.Dataset.from_tensor_slices(
+            (image_array, seg_array), name="dataset"
+        )
     return dataset
 
 
@@ -79,9 +108,9 @@ def expand_dataset(dataset: tf.data.Dataset, batch_size: int) -> tf.data.Dataset
     # dataset_expanded = dataset_expanded.unbatch()
     dataset_expanded = dataset_expanded.batch(batch_size)
 
-def _expand_dataset_tensors(image: tf.Tensor, mask: tf.Tensor):
+def _expand_dataset_tensors(image: tf.Tensor, mask: tf.Tensor, weight: tf.Tensor):
     elements_new = []
-    for element in (image, mask):
+    for element in (image, mask, weight):
         flipped_lr = tf.image.flip_left_right(element)
         flipped_ud = tf.image.flip_up_down(element)
         flipped_lrud = tf.image.flip_up_down(flipped_lr)
@@ -97,12 +126,12 @@ def _expand_dataset_tensors(image: tf.Tensor, mask: tf.Tensor):
                 [
                     element, 
                     flipped_lr, 
-                    flipped_ud,
-                    flipped_lrud, 
-                    *element_rotations,
-                    *flipped_lr_rotations, 
-                    *flipped_ud_rotations,
-                    *flipped_lrud_rotations
+                    # flipped_ud,
+                    # flipped_lrud, 
+                    # *element_rotations#,
+                    # *flipped_lr_rotations, 
+                    # *flipped_ud_rotations,
+                    # *flipped_lrud_rotations
                 ]
             )
         )
@@ -110,15 +139,13 @@ def _expand_dataset_tensors(image: tf.Tensor, mask: tf.Tensor):
     return dataset
     
 
-
 def expand_dataset_v2(dataset: tf.data.Dataset):
     n_images = len(dataset)
-    expansion_coeff = 16
+    expansion_coeff = Config.expansion_coeff
     dataset = dataset.interleave(_expand_dataset_tensors)
     dataset = dataset = dataset.apply(
         tf.data.experimental.assert_cardinality(n_images * expansion_coeff)
     )
-    dataset = dataset.batch(1)
     return dataset
 
 
@@ -152,16 +179,15 @@ def split_dataset(
     val_size = int(dataset_size * val_size)
     test_size = int(dataset_size * test_size)
     train_dataset = dataset.take(train_size)
-    test_dataset = dataset.skip(train_size)
-    val_dataset = test_dataset.skip(val_size)
-    test_dataset = test_dataset.take(test_size)
+    val_dataset = dataset.skip(train_size)
+    test_dataset = val_dataset.skip(val_size)
+    val = val_dataset.take(val_size)
     return train_dataset, val_dataset, test_dataset
 
 
 def data_pipeline(
     image_array: np.ndarray,
     seg_array: np.ndarray,
-    batch_size: int,
     train_size: float,
     val_size: float,
     test_size: float,
@@ -186,15 +212,23 @@ def data_pipeline(
         val_dataset(tf.data.Dataset) : Dataset to use for validation.
         test_dataset(tf.data.Dataset) : Dataset to use for testing.
     """
+    print("Generating weights")
+    weight_array = get_weights(seg_array)
+    print("Complete")
     dataset = create_dataset(
-        image_array, seg_array, normalise_images=normalise_images
+        image_array, 
+        seg_array,
+        weight_array=weight_array, 
+        normalise_images=normalise_images
     )
-    # dataset = expand_dataset(dataset, batch_size)
-    print(dataset.cardinality())
+    print("Generating sythetic data")
     dataset = expand_dataset_v2(dataset)
-    print(dataset.cardinality())
-    dataset.batch(batch_size)
+    print("Complete")
+    print("Shuffling data")
+    dataset = dataset.shuffle(Config.shuffle_size)
+    print("Complete")
+    dataset = dataset.batch(Config.batch_size, drop_remainder=True)
     train_dataset, val_dataset, test_dataset = split_dataset(
         dataset, train_size, val_size, test_size
     )
-    return train_dataset, val_dataset, test_dataset,
+    return train_dataset, val_dataset, test_dataset

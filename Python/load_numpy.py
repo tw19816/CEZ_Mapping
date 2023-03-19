@@ -95,6 +95,7 @@ def create_geryscale_masks(
         overwritten.
     """
     image_dataset_rgb, image_paths = load_image_dir_to_array(image_dir_path, sorted=False)
+    image_dataset_rgb = np.rint(image_dataset_rgb).astype(np.uint8)
     image_dataset_greyscale = dataset_rgb_to_index(
         image_dataset_rgb,
         path_to_bgr_labelmap,
@@ -126,8 +127,8 @@ if __name__ == "__main__":
     # dir_path = sys.argv[1]
     # rgb_path = sys.argv[2]
     # index_path = sys.argv[3]
-    dir_path = r"/home/vidarmarsh/CEZ_Mapping/Data/33/SegmentationClass"
-    bgr_path = r"/home/vidarmarsh/CEZ_Mapping/Data/33/labelmap_bgr.txt"
+    dir_path = r"/home/vidarmarsh/CEZ_Mapping/Data/34/SegmentationClass"
+    bgr_path = r"/home/vidarmarsh/CEZ_Mapping/Data/34/labelmap_bgr.txt"
     index_path = r"/home/vidarmarsh/CEZ_Mapping/Random/test_index_labelmap.txt"
     create_geryscale_masks(dir_path, bgr_path, index_path)
 
