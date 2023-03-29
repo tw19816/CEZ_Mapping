@@ -32,7 +32,7 @@ def get_label_pixel_maps(path_to_labelmap: str) -> tuple[dict, dict]:
 def get_rgb_index_maps(
     path_to_rgb_labelmap: str, path_to_index_labelmap: str
 ) -> tuple:
-    """Create a map from rgb values to geyscale index and inverse map from 
+    """Create a map from rgb values to greyscale index and inverse map from 
     labelmap.txt files.
     
     Args:
