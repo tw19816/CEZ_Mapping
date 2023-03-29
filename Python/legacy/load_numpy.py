@@ -49,20 +49,20 @@ def _pixel_rgb_to_index(pixel: np.ndarray, pixel_map: dict) -> np.ndarray:
 
 def dataset_rgb_to_index(
     image_dataset: np.ndarray,
-    path_to_bgr_labelmap: str,
-    path_to_index_labelmap: str
+    class_bgr_path: str,
+    class_greyscale_path: str
 ) -> np.ndarray:
     """Transforms rgb encoded image datasets to index encoded image datasets.
     
     Args:
         image_datasets:(np.ndarray) : Array containing image dataset. Note:
             channels must be BGR encoded in the innermost axis.
-        path_to_bgr_labelmap (str) : Path to labelmap.txt file containing 
+        class_bgr_path (str) : Path to labelmap.txt file containing 
             label to rgb conversion.
-        path_to_index_labelmap (str) : Path to labelmap.txt file containing
+        class_greyscale_path (str) : Path to labelmap.txt file containing
             label to index conversion."""
     rgb_to_index, index_to_rgb = preprocessing.get_rgb_index_maps(
-        path_to_bgr_labelmap, path_to_index_labelmap
+        class_bgr_path, class_greyscale_path
     )
     map_rgb_to_index = lambda x : _pixel_rgb_to_index(x, rgb_to_index)
     image_dataset = np.apply_along_axis(
@@ -73,8 +73,8 @@ def dataset_rgb_to_index(
 
 def create_geryscale_masks(
     image_dir_path: str,
-    path_to_bgr_labelmap: str,
-    path_to_index_labelmap: str
+    class_bgr_path: str,
+    class_greyscale_path: str
 ) -> None:
     """Create a directory with greyscale segmentation masks from a directory
     containing RGB segmentation masks.
@@ -85,9 +85,9 @@ def create_geryscale_masks(
     Args:
         image_dir_path (str) : Path to a directory containing .png 
             segmentation masks.
-        path_to_bgr_labelmap (str) : Path to labelmap.txt file mapping RGB 
+        class_bgr_path (str) : Path to labelmap.txt file mapping RGB 
             values to labels.
-        path_to_index_labelmap (str) : Path to labelmap.txt file mapping index
+        class_greyscale_path (str) : Path to labelmap.txt file mapping index
             values to labels.
         
     Errors:
@@ -98,8 +98,8 @@ def create_geryscale_masks(
     image_dataset_rgb = np.rint(image_dataset_rgb).astype(np.uint8)
     image_dataset_greyscale = dataset_rgb_to_index(
         image_dataset_rgb,
-        path_to_bgr_labelmap,
-        path_to_index_labelmap
+        class_bgr_path,
+        class_greyscale_path
     )
     image_dir = os.path.split(image_paths[0])[0]
     image_dir_greyscale = image_dir + "_greyscale"
