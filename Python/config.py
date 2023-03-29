@@ -8,6 +8,7 @@ class Config:
     """
     root_path = os.path.split(os.path.split(__file__)[0])[0]
     data_path = os.path.join(root_path, "Data_combined")
+    test_data_path = os.path.join(root_path, "Test_data")
     tfdata_path = os.path.join(data_path, "TFDatasets")
     image_path = os.path.join(data_path, "JPEGImages_256")
     segmentation_path = os.path.join(data_path, "SegmentationClass_greyscale_256")
