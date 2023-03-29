@@ -17,10 +17,21 @@ def get_png_paths_from_dir(dir_path: str) -> list[str]:
     return image_paths
 
 
-def load_weight_map(path):
+def load_weight_map(path: str) -> dict:
+    """Load weight map.
+
+    Args:
+        path (str) : The path of the weight map.
+
+    Returns:
+        weight_map (dict) : A dictionary that maps classes to 
+            class weights.
+    """
     with open(path, "r") as file:
         weight_map = json.load(file)
     keys = np.array(tuple(weight_map.keys()), dtype=np.float32)
-    values = np.array([weight_map.get(key) for key in weight_map.keys()], dtype=np.float32)
+    values = np.array(
+        [weight_map.get(key) for key in weight_map.keys()], dtype=np.float32
+    )
     weight_map = dict(zip(keys, values))
     return weight_map
