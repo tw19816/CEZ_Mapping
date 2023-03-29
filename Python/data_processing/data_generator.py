@@ -27,46 +27,92 @@ def load_image_and_mask(
     return image, mask
 
 
-def _make_weight_map(
+def _make_weight_mask(
     image_array: tf.Tensor,
     mask_array: tf.Tensor, 
-    class_weights: np.array
+    class_weights: np.ndarray
 ) -> tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
-    """"""
+    """Makes weighted mask from segmentation mask and class weights.
+    
+    Args:
+        image_array (tf.Tensor) : Image tensor.
+        mask_array (tf.Tensor) : Segmentation mask tensor.
+        class_weights (np.ndarray) : Class weighting.
+    
+    Returns:
+        image_array (tf.Tensor) : Image tensor.
+        mask_array (tf.Tensor) : Segmentation mask tensor.
+        weight_mask (tf.Tensor) : Weight mask.
+        """
     class_weights_tensor = tf.constant(class_weights)
-    weights = tf.gather(class_weights_tensor, indices=tf.cast(mask_array, tf.int32))
-    return image_array, mask_array, weights
+    weight_mask = tf.gather(
+        class_weights_tensor, indices=tf.cast(mask_array, tf.int32)
+    )
+    return image_array, mask_array, weight_mask
 
 
 def generate_image_dataset_from_files(
-    image_files: str,
-    mask_files: str,
+    image_files: list[str],
+    mask_files: list[str],
     batch_size: int,
     prefetch: int,
     shuffle_size: int,
     weights: np.ndarray
 ) -> tf.data.Dataset:
+    """Generates a dataset which returns batches of images, segmentation
+        masks and weight masks. 
+
+    Args:
+        image_files (list (str)) : List of image paths.
+        mask_files (list (str)) : List of segmentation mask paths.
+        batch_size (int) : Batch size.
+        prefetch (int) : Number of batches to prefetch.
+        shuffle_size (int) : Size of shuffle buffer.
+        weights (np.ndarray) : Array of class weights.
+
+    Returns:
+        dataset (tf.data.Dataset) : Dataset of images, segmentation
+            masks and weight masks.
+
+    """
     n_images = len(image_files)
+    # Check number of images and segmentation masks is the same
     if n_images != (n_masks := len(mask_files)):
         errmsg = f"different number of image and mask files, found {n_images}"
         errmsg += f"image files and {n_masks} mask files" 
         raise ValueError(errmsg)
     
     weights = weights.astype(np.float32)
-    def make_weight_map(
+
+    def make_weight_mask(
         image_array: tf.Tensor,
         mask_array: tf.Tensor
-    ):
-        return _make_weight_map(image_array, mask_array, weights)
+    ) -> tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
+        """Maps images, segmentation masks to images, segmentation masks
+            and weight mask.
+        
+        Args:
+        image_array (tf.Tensor) : Image tensor.
+        mask_array (tf.Tensor) : Segmentation mask tensor.
+
+        Returns:
+            image_array (tf.Tensor) : Image tensor.
+            mask_array (tf.Tensor) : Segmentation mask tensor.
+            weight_mask (tf.Tensor) : Weight mask.
+        """
+        return _make_weight_mask(image_array, mask_array, weights)
     
+    # Creates dataset of filenames
     dataset = tf.data.Dataset.from_tensor_slices((image_files, mask_files))
     dataset = dataset.shuffle(shuffle_size)
+    # Maps filenames -> images, masks
     dataset = dataset.map(
         load_image_and_mask, num_parallel_calls=tf.data.AUTOTUNE
     )
     dataset = dataset.batch(batch_size)
+    # Maps images, mask -> images, mask, weights
     dataset = dataset.map(
-        make_weight_map, num_parallel_calls=tf.data.AUTOTUNE
+        make_weight_mask, num_parallel_calls=tf.data.AUTOTUNE
     )
     dataset = dataset.prefetch(prefetch)
     return dataset
@@ -75,6 +121,7 @@ def generate_image_dataset_from_files(
 def _augment_datapoint(
     image: tf.Tensor, mask: tf.Tensor, rng: np.random.Generator
 ) -> tuple[tf.Tensor, tf.Tensor]:
+    """"""
     augment = rng.uniform(size=2) >= 0.5
     if augment[0]:
         image = tf.image.flip_left_right(image)

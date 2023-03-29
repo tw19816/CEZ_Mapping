@@ -52,8 +52,8 @@ def remove_axis_labels(axis: matplotlib.axes.Axes) -> matplotlib.axes.Axes:
 
 
 def compare_model_predictions(
-        model: tf.keras.Model, image: np.ndarray, mask_true: np.ndarray
-    ):
+    model: tf.keras.Model, image: np.ndarray, mask_true: np.ndarray
+):
     """Prints original image, segmentation mask and prediction side to
         side with a colour bar.
         

@@ -18,7 +18,7 @@ def get_png_paths_from_dir(dir_path: str) -> list[str]:
 
 
 def load_weight_map(path: str) -> dict:
-    """Load weight map.
+    """Loads class weights from json file.
 
     Args:
         path (str) : The path of the weight map.

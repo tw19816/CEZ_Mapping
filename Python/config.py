@@ -28,7 +28,7 @@ class Config:
     channels_low = 32
     channels_high = 512
     middle_repeat = 8
-    output_channels = 11
+    output_channels = 11     # number of classes
     background_label = 0
     expansion_coeff = 2
     prefetch = tf.data.AUTOTUNE
