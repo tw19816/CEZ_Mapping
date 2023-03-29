@@ -1,8 +1,23 @@
 import tensorflow as tf
 import numpy as np
+import sys
 
 
-def load_image_and_mask(image_path, mask_path):
+def load_image_and_mask(
+    image_path: str, mask_path: str
+) -> tuple[tf.Tensor, tf.Tensor]:
+    """Loads image and segmentation masks from png to tf.Tensors.
+    
+    Args:
+        image_path (str) : Path of an image.
+        mask_path (str) : Path of a segmentation mask.
+        
+    Returns: 
+        image (tf.Tensor (tf.float32)) : Image tensor with dimensions 
+            [row, column, channel],
+        mask (tf.Tensor (uint8)) : Segmentation mask tensor dimensions
+            [row, column, channel]      
+    """
     image_file, mask_file = [
         tf.io.read_file(file) for file in (image_path, mask_path)
     ]
@@ -17,6 +32,7 @@ def _make_weight_map(
     mask_array: tf.Tensor, 
     class_weights: np.array
 ) -> tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
+    """"""
     class_weights_tensor = tf.constant(class_weights)
     weights = tf.gather(class_weights_tensor, indices=tf.cast(mask_array, tf.int32))
     return image_array, mask_array, weights
