@@ -6,7 +6,15 @@ import matplotlib.pyplot as plt
 
 from Python.config import Config
 
-def load_colour_map(path):
+def load_colour_map(path:str) -> dict:
+    """Loads colour map of the image segmentation masks.
+
+    Args:
+        path (str) : Path of colour map.
+
+    Returns:
+        colour_map (dict) : Dictionary of colour values for each class.
+    """
     with open(path, "r") as file:
         colour_map = json.load(file)
     keys = np.array(tuple(colour_map.keys()), dtype=float)
@@ -15,41 +23,46 @@ def load_colour_map(path):
     return colour_map
 
 
-def one_hot_to_categorical(one_hot: tf.Tensor):
+def one_hot_to_categorical(one_hot: tf.Tensor) -> tf.Tensor:
+    """Takes one-hot encoded data and changes it to categorical encoding.
+
+    Args:
+        one_hot (tf.Tensor) : Dataset tensor with one-hot encoded masks.
+
+    Returns:
+        categorical (tf.Tensor) : Dataset tensor with categorical 
+            encoding.
+    """
     get_categorical = lambda x : np.argmax(x)
-    one_hot = np.apply_along_axis(get_categorical, axis=-1, arr=one_hot)
-    return one_hot
-
-
-def categorical_to_one_hot(
-    categorical: np.ndarray, n_classes: int, dtype: type = None
-) -> np.ndarray:
-    if dtype == None:
-        dtype = categorical.dtype
-    map_one_hot = dict(
-        zip(
-        range(n_classes),
-        np.zeros([n_classes, n_classes],
-        dtype=dtype)
-        )
-    )
-    for i in range(n_classes):
-        map_one_hot[i][i] = 1
-    one_hot_shape = list(categorical.shape)
-    one_hot_shape[-1] = n_classes
-    one_hot = np.zeros(one_hot_shape, dtype=dtype)
-    for key in map_one_hot.keys():
-        one_hot[np.squeeze(categorical == key)] = map_one_hot.get(key)
-    return one_hot  
+    categorical = np.apply_along_axis(get_categorical, axis=-1, arr=one_hot)
+    return categorical
 
 
 def remove_axis_labels(axis: matplotlib.axes.Axes) -> matplotlib.axes.Axes:
+    """Removes Axis labels.
+    
+    Args:
+        axis (matplotlib.axes.Axes) : Axis on images.
+    
+    Returns:
+        axis (matplotlib.axes.Axes) : Removed axis on images."""
     axis.get_yaxis().set_visible(False)
     axis.get_xaxis().set_visible(False)
     return axis
 
 
-def compare_model_predictions(model: tf.keras.Model, image, mask_true):
+def compare_model_predictions(
+        model: tf.keras.Model, image: np.ndarray, mask_true: np.ndarray
+    ):
+    """Prints original image, segmentation mask and prediction side to
+        side with a colour bar.
+        
+        Args:
+            model (tf.keras.Model) : Model used to create predictions.
+            image (np.ndarray) : Original Image.
+            mask_true (np.ndarray) : Segmentation mask.
+
+            """
     dataset = tf.data.Dataset.from_tensors(image).batch(1)
     mask_predicted = model.predict(dataset)
     mask_predicted = np.squeeze(mask_predicted)
@@ -68,5 +81,7 @@ def compare_model_predictions(model: tf.keras.Model, image, mask_true):
     im_pred = ax_mask_pred.imshow(mask_predicted, cmap=cmap, norm=norm)
     colour_map = load_colour_map(Config.colour_map_path)
     formatter = plt.FuncFormatter(lambda val, loc: colour_map.get(val))
-    fig.colorbar(im_pred, ticks=list(range(Config.output_channels)), format=formatter)
+    fig.colorbar(
+        im_pred, ticks=list(range(Config.output_channels)), format=formatter
+    )
     plt.show()
