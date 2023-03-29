@@ -5,6 +5,26 @@ from functools import reduce
 from Python.config import Config
 
 
+def _augment_datapoint(
+    image: tf.Tensor, mask: tf.Tensor, rng: np.random.Generator
+) -> tuple[tf.Tensor, tf.Tensor]:
+    augment = rng.uniform(size=2) >= 0.5
+    if augment[0]:
+        image = tf.image.flip_left_right(image)
+        mask = tf.image.flip_left_right(mask)
+    if augment[1]:
+        image = tf.image.flip_up_down(image)
+        mask = tf.image.flip_up_down(mask)
+    return image, mask
+
+
+def augment_dataset(dataset: tf.data.Dataset) -> tf.data.Dataset:
+    rng = np.random.default_rng()
+    def augment_datapoint(image, mask):
+        return _augment_datapoint(image, mask, rng)
+    dataset = dataset.map(augment_datapoint, num_parallel_calls=tf.data.AUTOTUNE)
+    return dataset
+
 def get_weights(seg_array: np.ndarray) -> np.ndarray:
     unique, counts = np.unique(seg_array, return_counts=True)
     multiply = lambda x, y : x * y
@@ -124,12 +144,12 @@ def _expand_dataset_tensors(image: tf.Tensor, mask: tf.Tensor, weight: tf.Tensor
         elements_new.append(
             tf.convert_to_tensor(
                 [
-                    element, 
-                    flipped_lr, 
+                    element,
+                    flipped_lr,
                     # flipped_ud,
-                    # flipped_lrud, 
+                    # flipped_lrud,
                     # *element_rotations#,
-                    # *flipped_lr_rotations, 
+                    # *flipped_lr_rotations,
                     # *flipped_ud_rotations,
                     # *flipped_lrud_rotations
                 ]
@@ -175,13 +195,18 @@ def split_dataset(
         errmsg = f"Paritions should sum to 1 but sum to {sum_partitions}"
         raise ValueError(errmsg)
     
+    ignore_weights = lambda x, y, z : [x, y]
+
     train_size = int(dataset_size * train_size)
     val_size = int(dataset_size * val_size)
     test_size = int(dataset_size * test_size)
     train_dataset = dataset.take(train_size)
     val_dataset = dataset.skip(train_size)
-    test_dataset = val_dataset.skip(val_size)
-    val = val_dataset.take(val_size)
+    test_dataset = val_dataset.skip(val_size).map(
+        ignore_weights, num_parallel_calls=tf.data.AUTOTUNE)
+    val_dataset = val_dataset.take(val_size).map(
+        ignore_weights, num_parallel_calls=tf.data.AUTOTUNE)
+
     return train_dataset, val_dataset, test_dataset
 
 

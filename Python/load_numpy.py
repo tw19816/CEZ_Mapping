@@ -21,7 +21,7 @@ def load_image_dir_to_array(
     Returns:
         image_dataset (np.ndarray) : Array of images with dimensions: 
             image number, pixel row, pixel column, BGR channel.
-        image_paths (list(str)) : List of image paths in the order which the
+        image_paths (list (str)) : List of image paths in the order which the
             images are loaded into array.
     """
     img_lookup = os.path.join(image_dir_path, '*.png')
@@ -127,8 +127,8 @@ if __name__ == "__main__":
     # dir_path = sys.argv[1]
     # rgb_path = sys.argv[2]
     # index_path = sys.argv[3]
-    dir_path = r"/home/vidarmarsh/CEZ_Mapping/Data/34/SegmentationClass"
-    bgr_path = r"/home/vidarmarsh/CEZ_Mapping/Data/34/labelmap_bgr.txt"
+    dir_path = r"/home/vidarmarsh/CEZ_Mapping/Data/extra/SegmentationClass"
+    bgr_path = r"/home/vidarmarsh/CEZ_Mapping/Data/extra/labelmap_bgr.txt"
     index_path = r"/home/vidarmarsh/CEZ_Mapping/Random/test_index_labelmap.txt"
     create_geryscale_masks(dir_path, bgr_path, index_path)
 
