@@ -191,17 +191,16 @@ def load_weight_map(path):
     return weight_map
 
 
+def load_colour_map(path):
+    with open(path, "r") as file:
+        colour_map = json.load(file)
+    keys = np.array(tuple(colour_map.keys()), dtype=float)
+    values = [colour_map.get(key) for key in colour_map.keys()]
+    colour_map = dict(zip(keys, values))
+    return colour_map
+
+
 def get_png_paths_from_dir(dir_path: str) -> list[str]:
     png_key = os.path.join(dir_path, "*.png")
     image_paths = glob(png_key)
     return image_paths
-# from Python.config import Config
-# if __name__ == "__main__":
-#     path = r"/home/vidarmarsh/CEZ_Mapping/Random/test/config.json"
-#     write_class_to_disk(Config, "config", path)
-# #     combine_images(r"/home/vidarmarsh/CEZ_Mapping/Random/test/post_process-32-17.png", r"/home/vidarmarsh/CEZ_Mapping/Random/test", greyscale=True)
-# #     # n_args = len(sys.argv)
-# #     # if n_args != 2:
-# #     #     print(f"Usage: {sys.argv[0]} <path to rgb labelmap.txt>")
-# #     #     exit()
-# #     # conv_rgb_bgr_labelmap(sys.argv[1])

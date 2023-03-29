@@ -1,4 +1,5 @@
 import os
+import tensorflow as tf
 class Config:
     """Database for configuring pipline
     
@@ -14,17 +15,19 @@ class Config:
     val_path = os.path.join(tfdata_path, "val_data")
     test_path = os.path.join(tfdata_path, "test_data")
     model_dir_path = os.path.join(data_path, "Models")
-    weight_map_path = os.path.join(data_path, "weight_map.json")
+    weight_map_path = os.path.join(data_path, "weight_map1.json")
+    colour_map_path = os.path.join(data_path, "colour_map.json")
     batch_size = 4
-    epochs = 100
+    epochs = 40
     train_size = 0.8
-    val_size = 0.2
-    test_size = 0
-    shuffle_size = 70
+    val_size = 0.1
+    test_size = 0.1
+    shuffle_size = 1000
     input_shape = (512, 512, 4)
-    channels_low = 48
-    channels_high = 2048
-    middle_repeat = 2
+    channels_low = 32
+    channels_high = 512
+    middle_repeat = 8
     output_channels = 11
     background_label = 0
     expansion_coeff = 2
+    prefetch = tf.data.AUTOTUNE

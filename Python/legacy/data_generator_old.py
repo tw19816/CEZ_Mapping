@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+from collections.abc import Callable
 from Python.config import Config
 from Python.model_tools import categorical_to_one_hot
 from Python.utils import load_image
@@ -9,10 +10,54 @@ def load_image_and_mask(image_path, mask_path):
     image_file, mask_file = [
         tf.io.read_file(file) for file in (image_path, mask_path)
     ]
-    image = tf.image.decode_png(image_file, channels=4)
-    mask = tf.image.decode_png(mask_file, channels=1)
+    image = tf.image.decode_png(image_file, channels=4, dtype=tf.uint8)
+    mask = tf.image.decode_png(mask_file, channels=1, dtype=tf.uint8)
     image = tf.image.convert_image_dtype(image, tf.float32)
     return image, mask
+
+
+def _make_weight_map(
+    image_array: tf.Tensor,
+    mask_array: tf.Tensor, 
+    class_weights: np.array
+) -> tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
+    class_weights_tensor = tf.constant(class_weights)
+    weights = tf.gather(class_weights_tensor, indices=tf.cast(mask_array, tf.int32))
+    return image_array, mask_array, weights
+
+
+def generate_image_dataset_from_files(
+    image_files: str,
+    mask_files: str,
+    batch_size: int,
+    shuffle_size: int,
+    weights: np.ndarray
+) -> tf.data.Dataset:
+    n_augmentations = 2
+    n_images = len(image_files)
+    if n_images != (n_masks := len(mask_files)):
+        errmsg = f"different number of image and mask files, found {n_images}"
+        errmsg += f"image files and {n_masks} mask files" 
+        raise ValueError(errmsg)
+    
+    weights = weights.astype(np.float32)
+    def make_weight_map(
+        image_array: tf.Tensor,
+        mask_array: tf.Tensor
+    ):
+        return _make_weight_map(image_array, mask_array, weights)
+    
+    dataset = tf.data.Dataset.from_tensor_slices((image_files, mask_files))
+    dataset = dataset.shuffle(shuffle_size)
+    dataset = dataset.map(
+        load_image_and_mask, num_parallel_calls=tf.data.AUTOTUNE 
+    )
+    dataset = dataset.map(
+        make_weight_map, num_parallel_calls=tf.data.AUTOTUNE
+    )
+    dataset = dataset.prefetch(Config.prefetch)
+    return dataset
+
 
 
 def generate_weights(
@@ -23,67 +68,6 @@ def generate_weights(
     for key in weight_map.keys():
         weight_array[mask_array == key] = weight_map.get(key)
     return weight_array
-
-
-def make_weight_map(
-    inputs, 
-    weight_map
-) -> tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
-    image_array, mask_array = inputs
-    mask_array = mask_array.numpy()
-    print("converted to numpy")
-    weights = generate_weights(mask_array, weight_map)
-    print("generated weights")
-    mask_array = tf.convert_to_tensor(weight_map, dtype=tf.float32)
-    return (image_array, mask_array, weights)
-
-
-def make_categorical_masks(
-    image_array: np.ndarray,
-    mask_array: np.ndarray,
-    weight_array: np.ndarray,
-    n_classes: int
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    mask_array = mask_array.numpy()
-    mask_array = categorical_to_one_hot(mask_array, n_classes, dtype=np.float32)
-    mask_array = tf.convert_to_tensor(mask_array, dtype=tf.float32)
-    return (image_array, mask_array, weight_array)
-
-
-def generate_image_dataset_from_files(
-    image_files: str,
-    mask_files: str,
-    batch_size: int,
-    shuffle_size: int,
-    weight_map: dict,
-    n_classes: int
-) -> tf.data.Dataset:
-    make_weight_map = lambda x, y : make_weight_map(x, y, weight_map)
-    make_weight_map = lambda x, y : tf.py_function(
-        make_weight_map, [x, y], [tf.float32, tf.float32, tf.float32]
-    )
-    make_categorical_masks = lambda x, y, z : make_categorical_masks(
-        x, y, z, n_classes
-    )
-    make_categorical_masks = lambda x, y, z : tf.py_function(
-        make_categorical_masks, [x, y, z], [tf.float32, tf.float32, tf.float32]
-    )
-    dataset = tf.data.Dataset.from_tensor_slices((image_files, mask_files))
-    dataset = dataset.shuffle(shuffle_size)
-    dataset = dataset.map(
-        load_image_and_mask, num_parallel_calls=tf.data.AUTOTUNE 
-    )
-    dataset = dataset.map(
-        make_weight_map, num_parallel_calls=tf.data.AUTOTUNE
-    )
-    dataset = dataset.map(
-        make_categorical_masks, num_parallel_calls=tf.data.AUTOTUNE
-    )
-    dataset = dataset.batch(batch_size)
-    dataset = dataset.prefetch(1)
-    return dataset
-
-
 
 class Data_Generator(tf.keras.utils.Sequence):
     def __init__(self, 
