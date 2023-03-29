@@ -1,5 +1,5 @@
 import tensorflow as tf
-from Python.aspp import ASPP
+from Python.model.aspp import ASPP
 
 def deeplabv3plus(
     input_shape: tuple,

@@ -30,10 +30,10 @@ def generate_image_dataset_from_files(
     image_files: str,
     mask_files: str,
     batch_size: int,
+    prefetch: int | tf.data.AUTOTUNE,
     shuffle_size: int,
     weights: np.ndarray
 ) -> tf.data.Dataset:
-    n_augmentations = 2
     n_images = len(image_files)
     if n_images != (n_masks := len(mask_files)):
         errmsg = f"different number of image and mask files, found {n_images}"
@@ -50,12 +50,13 @@ def generate_image_dataset_from_files(
     dataset = tf.data.Dataset.from_tensor_slices((image_files, mask_files))
     dataset = dataset.shuffle(shuffle_size)
     dataset = dataset.map(
-        load_image_and_mask, num_parallel_calls=tf.data.AUTOTUNE 
+        load_image_and_mask, num_parallel_calls=tf.data.AUTOTUNE
     )
+    dataset = dataset.batch(batch_size)
     dataset = dataset.map(
         make_weight_map, num_parallel_calls=tf.data.AUTOTUNE
     )
-    dataset = dataset.prefetch(Config.prefetch)
+    dataset = dataset.prefetch(prefetch)
     return dataset
 
 
