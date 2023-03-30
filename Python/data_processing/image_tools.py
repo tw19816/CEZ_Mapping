@@ -159,7 +159,21 @@ def split_png_images_in_four_from_dir(image_dir: str, save_dir: str):
     """Split all .png images in directory into four with 
         split_image_in_four and saves them to a new directory as defined
         in split_image_in_four
+    
+    
+    Args:
+        image_dir (str) : Directory containing .png images to be split.
+        save_dir (str) : Directory to save split image into.
     """
+    if os.path.exists(save_dir):
+        if os.path.isdir(save_dir):
+            pass
+        else:
+            raise FileNotFoundError(
+                "save path must point to a directory or an unused path"
+            )
+    else:
+        os.mkdir(save_dir)
     image_search = os.path.join(image_dir, "*.png")
     image_paths = glob(image_search)
     for path in image_paths:

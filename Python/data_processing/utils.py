@@ -137,25 +137,32 @@ def segmentation_masks_rgb_to_index(
     """Transforms rgb encoded segmentation masks to index encoded segmentation masks.
     
     Args:
-        segmentation_maskss:(np.ndarray) : Array containing segmentation
+        segmentation_masks:(np.ndarray) : Array containing segmentation
             masks in RGB encoding with shape (image, row, column, 
             channel).
-        class_to_rgb_path (str) : Path to labelmap.txt file containing 
-            label to rgb conversion.
-        class_to_greyscale_path (str) : Path to labelmap.txt file containing
-            label to index conversion."""
+        class_to_rgb_path (str) : Path to json file containing label to 
+            rgb conversion.
+        class_to_greyscale_path (str) : Path to json file containing 
+            label to categorical conversion.
+        
+    Returns:
+        segmentation_mask_categorical (np.ndarray) : Categorical 
+            segmentation masks.
+    """
     rgb_to_index, index_to_rgb = get_rgb_index_maps(
         class_to_rgb_path, class_to_greyscale_path
     )
-    map_rgb_to_index = lambda x : _pixel_rgb_to_index(x, rgb_to_index)
-    segmentation_masks = np.apply_along_axis(
-        map_rgb_to_index, axis=-1, arr=segmentation_masks
-    )
-    if np.isnan(segmentation_masks).any():
-        raise ValueError(
-            "bad mapping, array element not in RGB to category map"
-        )
-    return segmentation_masks
+    segmentation_masks_categorical = np.full(
+        segmentation_masks.shape[0:-1],
+        np.nan,
+        dtype=np.uint8)
+    for index in index_to_rgb.keys():
+        rgb = index_to_rgb.get(index)
+        segmentation_masks_categorical[
+            np.nonzero((segmentation_masks == rgb).all(axis=-1))
+        ] = index
+    np.expand_dims(segmentation_masks_categorical, axis=-1)
+    return segmentation_masks_categorical
 
 
 def create_weight_map(
@@ -173,7 +180,7 @@ def create_weight_map(
             categorical class values to float32 class weights.
     """
     unique, counts = np.unique(segmentation_array, return_counts=True)
-    unique, counts = [array.astype(np.float32) for array in (unique, counts)]
+    unique, counts = [array.astype(float) for array in (unique, counts)]
     multiply = lambda x, y : x * y
     n_pixels = reduce(multiply, segmentation_array.shape)
     n_categories = len(unique)
