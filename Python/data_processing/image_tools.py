@@ -123,6 +123,18 @@ def create_greyscale_masks(
 
 
 def split_image_in_four(image_path: str, save_dir: str) -> None:
+    """Split an image in four by dividing it down the middle in the x 
+        and y axis and save each subimage to dir.
+    
+    Args:
+        image_path (str) : Path to input image.
+        save_dir (str) : Directory to save the four subimages to. These
+            images will have the same filename as the original image 
+            with the indices _00, _01, _10, _11 appended to the end, 
+            with 00 correspoding to the upper left subimage and 01 
+            corresponding to the upper right subimage.
+    """
+
     image = load_image(image_path)
     image = np.squeeze(image)
     width, height = image.shape[0:2]
@@ -144,6 +156,18 @@ def split_image_in_four(image_path: str, save_dir: str) -> None:
 
 
 def combine_images(save_path: str, source_dir: str) -> None:
+    """Combine split images indexed with _00, _01, _10, _11 correspoding
+        to upper left, upper right, lower left, and lower right into a
+        single image.
+    
+    Args:
+        save_path (str) : Location to save combined image at. Note the
+            filename of the image must correspond to the filenames of 
+            the four images in the source dir minus the respective 
+            appended _00, _01, _10, _11.
+        source_dir (str) : Path to source dir containing the four images
+            to be combined.
+    """
     save_dir, filename = os.path.split(save_path)
     image_name, image_type = filename.split(".")
     images = []
@@ -161,7 +185,11 @@ def combine_images(save_path: str, source_dir: str) -> None:
     Image.fromarray(image).save(save_path)
 
 
-def split_images_in_four_from_dir(image_dir: str, save_dir: str):
+def split_png_images_in_four_from_dir(image_dir: str, save_dir: str):
+    """Split all .png images in directory into four with 
+        split_image_in_four and saves them to a new directory as defined
+        in split_image_in_four
+    """
     image_search = os.path.join(image_dir, "*.png")
     image_paths = glob(image_search)
     for path in image_paths:
