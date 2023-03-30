@@ -121,3 +121,48 @@ def create_greyscale_masks(
         image_path_greyscale = os.path.join(output_dir_path, filename)
         save_image(segmentation_array_greyscale[id], image_path_greyscale)
 
+
+def split_image_in_four(image_path: str, save_dir: str) -> None:
+    image = load_image(image_path)
+    image = np.squeeze(image)
+    width, height = image.shape[0:2]
+    half_height, half_width = [int(length/2) for length in (width, height)]
+    image00 = image[0:half_width, 0:half_height]
+    image01 = image[0:half_width, half_height:height] 
+    image10 = image[half_width:width, 0:half_height]
+    image11 = image[half_width:width, half_height:height]
+    images = [image00, image01, image10, image11]
+    dir_path, image_file = os.path.split(image_path)
+    image_name, image_type = image_file.split(".")
+    for image_section, index in zip(images, ("00", "01", "10", "11")):
+        filename = image_name + f"_{index}." + image_type
+        filepath = os.path.join(save_dir, filename)
+        if os.path.isfile(filepath):
+            raise FileExistsError(f"Image file already exists: {filepath}")
+        else:
+            Image.fromarray(image_section).save(filepath)
+
+
+def combine_images(save_path: str, source_dir: str) -> None:
+    save_dir, filename = os.path.split(save_path)
+    image_name, image_type = filename.split(".")
+    images = []
+    for index in ("00", "01", "10", "11"):
+        image_section_path = os.path.join(source_dir, image_name)
+        image_section_path += f"_{index}." + image_type
+        image_section = load_image(image_section_path)
+        images.append(image_section)
+    image0 = np.concatenate((images[0], images[1]), axis=1)
+    image1 = np.concatenate((images[2], images[3]), axis=1)
+    image = np.concatenate((image0, image1), axis=0)
+    image = np.squeeze(image)
+    if os.path.isfile(save_path):
+        raise FileExistsError(f"Image file already exists: {save_path}") 
+    Image.fromarray(image).save(save_path)
+
+
+def split_images_in_four_from_dir(image_dir: str, save_dir: str):
+    image_search = os.path.join(image_dir, "*.png")
+    image_paths = glob(image_search)
+    for path in image_paths:
+        split_image_in_four(path, save_dir)
