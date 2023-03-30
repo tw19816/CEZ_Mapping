@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 
 from Python.config import Config
 
+########################################################################
+# Used to visualise data predictions
+########################################################################
+
 def load_colour_map(path:str) -> dict:
     """Loads colour map of the image segmentation masks.
 
@@ -85,3 +89,32 @@ def compare_model_predictions(
         im_pred, ticks=list(range(Config.output_channels)), format=formatter
     )
     plt.show()
+
+def show_predictions(
+    model: tf.keras.Model, dataset: tf.data.Dataset, num: int = 1
+):
+    """Prints image, segmentation mask and predictions.
+    
+    Args:
+        model (tf.kera.Model) : Model used to make predictions.
+        dataset (tf.data.Dataset) : Dataset for which prediction is made.
+        num (int) : Number of elements to compare. 
+    """
+    for image, mask, weight in iter(dataset.take(num)):
+        compare_model_predictions(model, image[0], mask[0])
+
+########################################################################
+# Load model
+########################################################################
+
+def load_model(path_to_model: str) -> tf.keras.Model:
+    """Loads model from path.
+    
+    Args:
+        path_to_model (str) : Path of where model is saved.
+        
+    Returns:
+        model (tf.keras.Model) : Model loaded from path.
+        """
+    model = tf.keras.models.load_model(path_to_model)
+    return model
