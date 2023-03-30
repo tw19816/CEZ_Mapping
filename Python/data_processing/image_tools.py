@@ -22,8 +22,31 @@ def load_image(image_path: str) -> np.ndarray:
     return image
 
 
+def save_image(image: np.ndarray, path: str) -> None:
+    """Save an integer image array as a png image.
+    
+    Args:
+        image (np.ndarray (int)) : Image array to save, must contain 
+            integer pixel values.
+        path (str) : Path to save location, must end in .png.
+    
+    Errors:
+        FileExistsError : If path already exists.
+        ValueError : If image path does not end in .png
+        ValueError : If image dtype is not int
+    """
+    if os.path.exists(path):
+        raise FileExistsError(f"file already exists at {path}")
+    extension = path.split(".")[-1]
+    if extension != "png":
+        raise ValueError("path must end in .png")
+    if not np.issubdtype(image.dtype, np.integer):
+        raise ValueError("image must be an interger array")
+    Image.fromarray(image).save(path)
+
+
 def load_image_dir_to_array(
-    image_dir_path: str, sorted: bool = True, normalised=False
+    segmentation_rgb_dir_path: str, sorted: bool = True, normalised=False
 ) -> tuple[np.ndarray, list[str]]:
     """Loads all png images from dir into float32 array with RGB
         encoding.
@@ -33,10 +56,11 @@ def load_image_dir_to_array(
         sorted (bool) : If true, sorts images based on filenames.
         
     Returns:
-        image_dataset (np.ndarray) : Array of images with dimensions: 
-            image number, pixel row, pixel column, RGB channel.
-        image_paths (list (str)) : List of image paths in the order which the
-            images are loaded into array.
+        image_dataset (np.ndarray (np.float32)) : Array of images with 
+            dimensions: image number, pixel row, pixel column, RGB 
+            channel.
+        image_paths (list (str)) : List of image paths in the order 
+            which the images are loaded into array.
     """
     img_lookup = os.path.join(image_dir_path, '*.png')
     image_paths = glob(img_lookup)
@@ -49,48 +73,75 @@ def load_image_dir_to_array(
     return image_dataset, image_paths
 
 
+def segmentation_masks_rgb_to_index(
+    segmentation_masks: np.ndarray,
+    class_to_rgb_path: str,
+    class_to_greyscale_path: str
+) -> np.ndarray:
+    """Transforms rgb encoded image datasets to index encoded image datasets.
+    
+    Args:
+        segmentation_maskss:(np.ndarray) : Array containing segmentation
+            masks in RGB encoding with shape (image, row, column, 
+            channel).
+        class_to_rgb_path (str) : Path to labelmap.txt file containing 
+            label to rgb conversion.
+        class_to_greyscale_path (str) : Path to labelmap.txt file containing
+            label to index conversion."""
+    rgb_to_index, index_to_rgb = preprocessing.get_rgb_index_maps(
+        class_to_rgb_path, class_to_greyscale_path
+    )
+    map_rgb_to_index = lambda x : _pixel_rgb_to_index(x, rgb_to_index)
+    segmentation_masks = np.apply_along_axis(
+        map_rgb_to_index, axis=-1, arr=segmentation_masks
+    )
+    return segmentation_masks
+
 
 def create_greyscale_masks(
-    image_dir_path: str,
+    segmentation_rgb_dir_path: str,
     output_dir_path: str,
-    class_bgr_path: str,
-    class_greyscale_path: str
+    class_to_rgb_path: str,
+    class_to_greyscale_path: str
 ) -> None:
     """Create a directory with greyscale segmentation masks from a 
     directory containing RGB segmentation masks.
     
     Args:
-        image_dir_path (str) : Path to a directory containing .png 
-            segmentation masks.
+        segmentation_rgb_dir_path (str) : Path to a directory containing
+            .png segmentation masks with RGB encoding.
         output_dir_path (str) : Path to output directory for greyscale
             images.
-        class_bgr_path (str) : Path to labelmap.txt file mapping RGB 
-            values to labels.
-        class_greyscale_path (str) : Path to labelmap.txt file mapping 
-            index values to labels.
+        class_to_rgb_path (str) : Path to labelmap.txt file mapping class
+            labels to RGB values.
+        class_to_greyscale_path (str) : Path to labelmap.txt file mapping 
+            class labels to greyscale categorical values.
         
     Errors:
+        FileExistsError : If output_dir_path already exists but is not a
+            directory.
         FileExistsError: If an image already exists in the output 
             directory with the same name as an image in the input
             directory.
     """
-    image_dataset_rgb, image_paths = load_image_dir_to_array(image_dir_path, sorted=False)
-    image_dataset_rgb = np.rint(image_dataset_rgb).astype(np.uint8)
-    image_dataset_greyscale = dataset_rgb_to_index(
-        image_dataset_rgb,
-        class_bgr_path,
-        class_greyscale_path
+    segmentation_array_rgb, image_paths = load_image_dir_to_array(
+        segmentation_rgb_dir_path, sorted=True, normalised=False
     )
-    image_dir = os.path.split(image_paths[0])[0]
-    image_dir_greyscale = image_dir + "_greyscale"
-    if not os.path.isdir(image_dir_greyscale):
-        os.mkdir(image_dir_greyscale)
+    segmentation_array_rgb = np.rint(segmentation_array_rgb).astype(np.uint8)
+    segmentation_array_greyscale = segmentation_masks_rgb_to_index(
+        segmentation_array_rgb,
+        class_to_rgb_path,
+        class_to_greyscale_path
+    )
+    if os.path.exists(output_dir_path):
+        if not os.path.isdir(output_dir_path):
+            raise FileExistsError(
+                "output_dir_path already exists by it is not a directory"
+            )
     else:
-        raise FileExistsError(
-            f"Cannot make greyscale directory since it already exists: {image_dir_greyscale}"
-        )
+        os.mkdir(output_dir_path)
     for id, path in enumerate(image_paths):
         dir_path, filename = os.path.split(path)
-        image_path_greyscale = os.path.join(image_dir_greyscale, filename)
-        cv2.imwrite(image_path_greyscale, image_dataset_greyscale[id])
+        image_path_greyscale = os.path.join(output_dir_path, filename)
+        save_image(segmentation_array_greyscale[id], image_path_greyscale)
 
