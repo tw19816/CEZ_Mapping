@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+from functools import reduce
 from glob import glob
 
 
@@ -139,3 +140,27 @@ def segmentation_masks_rgb_to_index(
         map_rgb_to_index, axis=-1, arr=segmentation_masks
     )
     return segmentation_masks
+
+
+def create_weight_map(
+    segmentation_array: np.ndarray
+) -> dict:
+    """Create a dictionary that maps greyscale categorical class labels
+    to their respective weights.
+    
+    Args:
+        segmentation_array (np.ndarray) : array containing all segmentation
+            masks in the dataset.
+
+    Returns:
+        weight_map (dict) : Dictionary mapping float32 greyscale 
+            categorical class values to float32 class weights.
+    """
+    unique, counts = np.unique(segmentation_array, return_counts=True)
+    unique, counts = [array.astype(np.float32) for array in (unique, counts)]
+    multiply = lambda x, y : x * y
+    n_pixels = reduce(multiply, segmentation_array.shape)
+    n_categories = len(unique)
+    category_weights = n_pixels / (n_categories * counts)
+    weight_map = dict(zip(unique, category_weights))
+    return weight_map
