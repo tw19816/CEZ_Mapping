@@ -11,6 +11,11 @@ class Save_Class:
 
 
 def serialise_class_dict(item: object):
+    """Serialises class object to json format.
+
+    Args:
+        item (object) : Object to be serialised.
+    """
     keys = item.__dict__.keys()
     item_dict = {}
     for key in keys:
@@ -20,19 +25,25 @@ def serialise_class_dict(item: object):
     return item_dict
 
 
-def write_dict_to_disk(dictionary: dict, path):
+def write_dict_to_disk(dictionary: dict, path: str):
+    """Writes dictionary to disk as json file.
+
+    Args:
+        dictionary (dict) : Dictionary to be saved.
+        path (str) : Path of save location.
+    """
     save_json = json.dumps(dictionary, indent="\t")
     with open(path, "x") as file:
         file.write(save_json)
 
 
 def write_class_to_disk(item: object, class_name: str, path: str):
-    """
+    """Writes class object to disk with day and time stamp.
 
     Args:
-        items (object) : 
-        class_name (str) : 
-        path (str) : 
+        item (object) : Class that will be saved to disk.
+        class_name (str) : Name of class.
+        path (str) : Path to save location.
     
     """
     item_dict = serialise_class_dict(item)
