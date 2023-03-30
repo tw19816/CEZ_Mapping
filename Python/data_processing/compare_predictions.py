@@ -71,8 +71,10 @@ def compare_model_predictions(
     mask_predicted = model.predict(dataset)
     mask_predicted = np.squeeze(mask_predicted)
     mask_predicted = one_hot_to_categorical(mask_predicted)
+    colour_map = load_colour_map(Config.colour_map_path)
+    n_classes = len(colour_map.keys())
     cmap = plt.cm.rainbow
-    norm = matplotlib.colors.BoundaryNorm(np.arange(-0.5, 11.5, 1), cmap.N)
+    norm = matplotlib.colors.BoundaryNorm(np.arange(-0.5, n_classes + 0.5, 1), cmap.N)
     fig = plt.figure(figsize=[16, 6])
     ax_image = fig.add_axes([0.0, 0.15, 0.3, 0.7], title="Original Image")
     ax_image = remove_axis_labels(ax_image)
