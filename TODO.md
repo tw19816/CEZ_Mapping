@@ -1,9 +1,16 @@
+# solution for memory issue
+* generate weights for all images and save them to disk
+* generate augmentations for all images, masks, and weights and save them to disk
+* write a generator that inherits from tensorflow.sequence to batch load images
+    * note make segmentation masks
+
 # todo for finalised pipeline
 * fix data pipeline DONE
-* fix image sizing (256 pixel)
+* fix image sizing (512 per pixel) DONE
 * fix parameter saving DONE
-* fix data visualisation
-* solve class inbalance issues
+* fix data visualisation DONE
+* solve class inbalance issues DONE (ish)
+* make training and validation sets more varied DONE
 
 # Things That Need to be Done:
 * Create data pipeline for sythesising a large dataset
