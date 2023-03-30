@@ -5,7 +5,7 @@ from Python.load_numpy import load_image_dir_to_array, dataset_rgb_to_index
 from Python.config import Config
 
 
-def test_dataset_rgb_to_index():
+def test_segmentation_masks_rgb_to_index():
     image_dir_path = os.path.join(
         Config.root_path, "Data", "33", "SegmentationClass"
     )
@@ -19,7 +19,7 @@ def test_dataset_rgb_to_index():
         image_dir_path, sorted=False
     )
     image_dataset = image_dataset[0:3]
-    image_dataset = dataset_rgb_to_index(
+    image_dataset = segmentation_masks_rgb_to_index(
         image_dataset, path_to_rgb_map, path_to_index_map
     )
     assert image_dataset.shape == (3, 1024, 1024, 1), \
@@ -37,5 +37,5 @@ def test_dataset_rgb_to_index():
 
 
 if __name__ == "__main__":
-    test_dataset_rgb_to_index()
+    test_segmentation_masks_rgb_to_index()
     
