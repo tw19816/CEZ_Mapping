@@ -2,6 +2,7 @@ import os
 import numpy as np
 from PIL import Image
 from glob import glob
+from Python.data_processing.utils import segmentation_masks_rgb_to_index
 
 
 def load_image(image_path: str) -> np.ndarray:
@@ -62,7 +63,7 @@ def load_image_dir_to_array(
         image_paths (list (str)) : List of image paths in the order 
             which the images are loaded into array.
     """
-    img_lookup = os.path.join(image_dir_path, '*.png')
+    img_lookup = os.path.join(segmentation_rgb_dir_path, '*.png')
     image_paths = glob(img_lookup)
     if sorted:
         image_paths.sort()
@@ -71,31 +72,6 @@ def load_image_dir_to_array(
     if normalised:
         image_dataset = image_dataset / 255.0
     return image_dataset, image_paths
-
-
-def segmentation_masks_rgb_to_index(
-    segmentation_masks: np.ndarray,
-    class_to_rgb_path: str,
-    class_to_greyscale_path: str
-) -> np.ndarray:
-    """Transforms rgb encoded image datasets to index encoded image datasets.
-    
-    Args:
-        segmentation_maskss:(np.ndarray) : Array containing segmentation
-            masks in RGB encoding with shape (image, row, column, 
-            channel).
-        class_to_rgb_path (str) : Path to labelmap.txt file containing 
-            label to rgb conversion.
-        class_to_greyscale_path (str) : Path to labelmap.txt file containing
-            label to index conversion."""
-    rgb_to_index, index_to_rgb = preprocessing.get_rgb_index_maps(
-        class_to_rgb_path, class_to_greyscale_path
-    )
-    map_rgb_to_index = lambda x : _pixel_rgb_to_index(x, rgb_to_index)
-    segmentation_masks = np.apply_along_axis(
-        map_rgb_to_index, axis=-1, arr=segmentation_masks
-    )
-    return segmentation_masks
 
 
 def create_greyscale_masks(
@@ -112,9 +88,9 @@ def create_greyscale_masks(
             .png segmentation masks with RGB encoding.
         output_dir_path (str) : Path to output directory for greyscale
             images.
-        class_to_rgb_path (str) : Path to labelmap.txt file mapping class
-            labels to RGB values.
-        class_to_greyscale_path (str) : Path to labelmap.txt file mapping 
+        class_to_rgb_path (str) : Path to json file mapping class labels
+            to RGB values.
+        class_to_greyscale_path (str) : Path to json file mapping 
             class labels to greyscale categorical values.
         
     Errors:
