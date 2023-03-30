@@ -21,9 +21,9 @@ def load_colour_map(path:str) -> dict:
     """
     with open(path, "r") as file:
         colour_map = json.load(file)
-    keys = np.array(tuple(colour_map.keys()), dtype=float)
+    classes = colour_map.keys()
     values = [colour_map.get(key) for key in colour_map.keys()]
-    colour_map = dict(zip(keys, values))
+    colour_map = dict(zip(values, classes))
     return colour_map
 
 
