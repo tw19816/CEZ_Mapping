@@ -157,7 +157,8 @@ def augment_dataset(dataset: tf.data.Dataset) -> tf.data.Dataset:
         _augment_datapoint().
         
     Args:
-        dataset (tf.data.Dataset) : Current dataset.
+        dataset (tf.data.Dataset) : Current dataset, must return a 
+        tuple of (image, segmentation mask, weight mask).
 
     Returns:
         dataset (tf.data.Dataset) : Augmented dataset.
