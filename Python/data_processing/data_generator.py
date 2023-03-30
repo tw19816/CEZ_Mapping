@@ -119,7 +119,10 @@ def generate_image_dataset_from_files(
 
 
 def _augment_datapoint(
-    image: tf.Tensor, mask: tf.Tensor, rng: np.random.Generator
+    image: tf.Tensor, 
+    mask: tf.Tensor, 
+    weights: tf.Tensor, 
+    rng: np.random.Generator
 ) -> tuple[tf.Tensor, tf.Tensor]:
     """Creates random augmentations to the data. 
     
@@ -129,20 +132,24 @@ def _augment_datapoint(
     Args:
         image (tf.Tensor) : Image tensor.
         mask (tf.Tensor) : Segmentation mask tensor.
+        weight (tf.Tensor) : Weight mask tensor.
         rng (np.random.Generator) : Numpy random number generator.
 
     Returns:
         image (tf.Tensor) : Augmented image tensor.
         mask (tf.Tensor) : Augmented segmentation mask tensor.
+        weight (tf.Tensor) : Weight mask tensor.
     """
     augment = rng.uniform(size=2) >= 0.5
     if augment[0]:
         image = tf.image.flip_left_right(image)
         mask = tf.image.flip_left_right(mask)
+        weights = tf.image.flip_left_right(weights)
     if augment[1]:
         image = tf.image.flip_up_down(image)
         mask = tf.image.flip_up_down(mask)
-    return image, mask
+        weights = tf.image.flip_up_down(weights)
+    return image, mask, weights
 
 
 def augment_dataset(dataset: tf.data.Dataset) -> tf.data.Dataset:
@@ -156,8 +163,8 @@ def augment_dataset(dataset: tf.data.Dataset) -> tf.data.Dataset:
         dataset (tf.data.Dataset) : Augmented dataset.
     """
     rng = np.random.default_rng()
-    def augment_datapoint(image, mask):
-        return _augment_datapoint(image, mask, rng)
+    def augment_datapoint(image, mask, weights):
+        return _augment_datapoint(image, mask, weights, rng)
     dataset = dataset.map(
         augment_datapoint, num_parallel_calls=tf.data.AUTOTUNE
     )
