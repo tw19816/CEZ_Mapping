@@ -155,6 +155,17 @@ def split_image_in_four(image_path: str, save_dir: str) -> None:
             Image.fromarray(image_section).save(filepath)
 
 
+def split_png_images_in_four_from_dir(image_dir: str, save_dir: str):
+    """Split all .png images in directory into four with 
+        split_image_in_four and saves them to a new directory as defined
+        in split_image_in_four
+    """
+    image_search = os.path.join(image_dir, "*.png")
+    image_paths = glob(image_search)
+    for path in image_paths:
+        split_image_in_four(path, save_dir)
+
+
 def combine_images(save_path: str, source_dir: str) -> None:
     """Combine split images indexed with _00, _01, _10, _11 correspoding
         to upper left, upper right, lower left, and lower right into a
@@ -183,14 +194,3 @@ def combine_images(save_path: str, source_dir: str) -> None:
     if os.path.isfile(save_path):
         raise FileExistsError(f"Image file already exists: {save_path}") 
     Image.fromarray(image).save(save_path)
-
-
-def split_png_images_in_four_from_dir(image_dir: str, save_dir: str):
-    """Split all .png images in directory into four with 
-        split_image_in_four and saves them to a new directory as defined
-        in split_image_in_four
-    """
-    image_search = os.path.join(image_dir, "*.png")
-    image_paths = glob(image_search)
-    for path in image_paths:
-        split_image_in_four(path, save_dir)

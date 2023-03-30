@@ -71,8 +71,8 @@ def get_class_pixel_maps(path: str) -> tuple[dict, dict]:
     raw_class_pixel = load_json_dict(path)
     class_to_pixel = {}
     for key in raw_class_pixel.keys():
-        value = np.asarray(raw_class_pixel.get(key))
-        if len(value) > 1:
+        value = np.asarray(raw_class_pixel.get(key), dtype=str)
+        if value.shape != ():
             value = ",".join(value)
         else:
             value = str(value)
@@ -117,6 +117,18 @@ def get_rgb_index_maps(
     return rgb_to_index, index_to_rgb
 
 
+def _pixel_rgb_to_index(pixel: np.ndarray, pixel_map: dict) -> np.ndarray:
+    """Applies a pixel mapping to the channels of a single pixel in a 
+        segmentation mask.
+        
+    Args:
+        pixel (np.ndarray) : Array of pixel channels.
+        pixel_map (dict) : mapping of pixel channels"""
+    pixel_csv = ",".join(pixel.astype(str))
+    out = np.array(pixel_map.get(pixel_csv), dtype=np.float32)
+    return out
+
+
 def segmentation_masks_rgb_to_index(
     segmentation_masks: np.ndarray,
     class_to_rgb_path: str,
@@ -139,6 +151,10 @@ def segmentation_masks_rgb_to_index(
     segmentation_masks = np.apply_along_axis(
         map_rgb_to_index, axis=-1, arr=segmentation_masks
     )
+    if np.isnan(segmentation_masks).any():
+        raise ValueError(
+            "bad mapping, array element not in RGB to category map"
+        )
     return segmentation_masks
 
 
