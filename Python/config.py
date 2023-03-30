@@ -7,17 +7,25 @@ class Config:
         root_path (str) : Absolute path to project root dir.
     """
     root_path = os.path.split(os.path.split(__file__)[0])[0]
-    data_path = os.path.join(root_path, "Data_combined")
+    data_path = os.path.join(root_path, "Data", "Priddy_processed")
     test_data_path = os.path.join(root_path, "Test_data")
-    tfdata_path = os.path.join(data_path, "TFDatasets")
-    image_path = os.path.join(data_path, "JPEGImages_256")
-    segmentation_path = os.path.join(data_path, "SegmentationClass_greyscale_256")
-    train_path = os.path.join(tfdata_path, "train_data")
-    val_path = os.path.join(tfdata_path, "val_data")
-    test_path = os.path.join(tfdata_path, "test_data")
+    # tfdata_path = os.path.join(data_path, "TFDatasets")
+
+    # Image Paths
+    image_path = os.path.join(data_path, "JPEGImages_512")
+    segmentation_path = os.path.join(
+        data_path, "SegmentationClass_categorical_512"
+    )
+    # train_path = os.path.join(tfdata_path, "train_data")
+    # val_path = os.path.join(tfdata_path, "val_data")
+    # test_path = os.path.join(tfdata_path, "test_data")
+
+    # Model Paths
     model_dir_path = os.path.join(data_path, "Models")
-    weight_map_path = os.path.join(data_path, "weight_map1.json")
-    colour_map_path = os.path.join(data_path, "colour_map.json")
+    weight_map_path = os.path.join(data_path, "weights.json")
+    colour_map_path = os.path.join(data_path, "class_categorical.json")
+
+    # Training Parameters
     batch_size = 4
     epochs = 40
     train_size = 0.8
