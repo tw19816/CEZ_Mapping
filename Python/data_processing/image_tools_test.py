@@ -46,11 +46,64 @@ def test_load_image():
     _check_image_shape(greyscale_image, expected_greyscale_shape)
     # Check output is in range [0, 255] and not noramlised to [0, 1)
     assert rgba_image.max() <=255 and rgba_image.max() > 1, \
-        "load image output was normalised, but should be un-normalised uint8"
+        "load_image output was normalised"
+    # Check image output uses uint8 encoding
+    assert np.issubdtype(rgba_image.dtype, np.uint8), \
+        "load_image output is not uint8 encoded"
+
+
+def test_save_image():
+    print("Testing save_image")
+    occupied_path = os.path.join(
+        Config.test_data_path,
+        "data_processing",
+        "sample_rgba_image_dir",
+        "post_process-32-20.png" 
+    )
+    available_path = os.path.join(
+        Config.test_data_path,
+        "data_processing",
+        "sample_rgba_image_dir",
+        "post_process-temp.png" 
+    )
+    bad_extension_path = os.path.join(
+        Config.test_data_path,
+        "data_processing",
+        "sample_rgba_image_dir",
+        "post_process-temp.jpeg" 
+    )
+    image = image_tools.load_image(occupied_path)
+    # Test saving to occupied path raises a FileExistsError
+    try:
+        image_tools.save_image(image, occupied_path)
+    except FileExistsError:
+        pass
+    else:
+        raise AssertionError(
+            "does not throw FileExistsError when trying to write to occupied " +
+            "path"
+        )
+    # Test saving to bad path which does not end in .png raises a 
+    # ValueError
+    try:
+        image_tools.save_image(image, bad_extension_path)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError(
+            "Does not throw ValueError when trying to write to a path which " +
+            "not end in .png"
+        )
+    # Test saving to a good path works by loading the image back and 
+    # checking they are the same.
+    image_tools.save_image(image, available_path)
+    saved_image = image_tools.load_image(available_path)
+    os.remove(available_path)
+    assert (saved_image == image).all(), "saved image was corrupted"
 
 
 def test_load_image_dir_to_array():
-    print("Tesing load_image_dir_to_array")
+    print("Testing load_image_dir_to_array")
     expected_image_number = 2
     expected_image_shape = [1024, 1024, 4]
     image_dir_path = os.path.join(
@@ -90,4 +143,5 @@ def test_load_image_dir_to_array():
 
 if __name__ == "__main__":
     test_load_image()
+    test_save_image()
     test_load_image_dir_to_array()
