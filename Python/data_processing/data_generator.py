@@ -121,7 +121,20 @@ def generate_image_dataset_from_files(
 def _augment_datapoint(
     image: tf.Tensor, mask: tf.Tensor, rng: np.random.Generator
 ) -> tuple[tf.Tensor, tf.Tensor]:
-    """"""
+    """Creates random augmentations to the data. 
+    
+    The possible augmentations are flip image vertically and flip image 
+    horizontally.
+    
+    Args:
+        image (tf.Tensor) : Image tensor.
+        mask (tf.Tensor) : Segmentation mask tensor.
+        rng (np.random.Generator) : Numpy random number generator.
+
+    Returns:
+        image (tf.Tensor) : Augmented image tensor.
+        mask (tf.Tensor) : Augmented segmentation mask tensor.
+    """
     augment = rng.uniform(size=2) >= 0.5
     if augment[0]:
         image = tf.image.flip_left_right(image)
@@ -133,10 +146,21 @@ def _augment_datapoint(
 
 
 def augment_dataset(dataset: tf.data.Dataset) -> tf.data.Dataset:
+    """Augments the dataset with transformations defined in 
+        _augment_datapoint().
+        
+    Args:
+        dataset (tf.data.Dataset) : Current dataset.
+
+    Returns:
+        dataset (tf.data.Dataset) : Augmented dataset.
+    """
     rng = np.random.default_rng()
     def augment_datapoint(image, mask):
         return _augment_datapoint(image, mask, rng)
-    dataset = dataset.map(augment_datapoint, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(
+        augment_datapoint, num_parallel_calls=tf.data.AUTOTUNE
+    )
     return dataset
 
 
@@ -149,15 +173,17 @@ def split_dataset(
     """Partitions a dataset into train validation and test sets.
     
     Args:
-        dataset (tf.data.Dataset) : The dataset to split. This must return
-            (image, mask) when iterated across.
+        dataset (tf.data.Dataset) : The dataset to split. This must 
+            return (image, mask) when iterated across.
         train_size (float) : Fraction of dataset to use for training.
         val_size (float) : Fraction of dataset to use for validation.
         test_size (float) : Fraction of dataset to use for testing.
     
     Returns:
-        train_dataset (tf.data.Dataset) : The dataset to use for training.
-        val_dataset (tf.data.Dataset) : The dataset to use for validation.
+        train_dataset (tf.data.Dataset) : The dataset to use for 
+            training.
+        val_dataset (tf.data.Dataset) : The dataset to use for 
+            validation.
         test_dataset (tf.data.Dataset) : The dataset to use for testing.
     """
     dataset_size = len(dataset)
