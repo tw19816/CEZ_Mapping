@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from Python.data_processing.utils import segmentation_masks_rgb_to_index
+from Python.data_processing.utils import split_dataset_paths
 from Python.data_processing.utils import get_class_pixel_maps
 from Python.data_processing.image_tools import load_image_dir_to_array
 from Python.config import Config
@@ -8,13 +9,13 @@ from Python.config import Config
 
 def test_segmentation_masks_rgb_to_index():
     image_dir_path = os.path.join(
-        Config.root_path, "Data", "33", "SegmentationClass"
+        Config.test_data_path, "data_processing", "sample_rgb_mask_dir"
     )
     path_to_rgb_map = os.path.join(
-        Config.root_path, "Data", "33", "labelmap_bgr.txt"
+        Config.root_path, "Data", "Priddy_processed", "class_RGB.json"
     )
     path_to_index_map = os.path.join(
-        Config.root_path, "Random", "test_index_labelmap.txt"
+        Config.root_path, "Data", "Priddy_processed", "class_categorical.json"
     )
     image_dataset, image_filenames = load_image_dir_to_array(
         image_dir_path, sorted=False
@@ -41,5 +42,19 @@ def test_segmentation_masks_rgb_to_index():
                 "{correct_pixel_values}"
 
 
+def test_split_dataset_paths():
+    image_paths = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    mask_paths = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    train_size = 0.6
+    val_size = 0.2
+    test_size = 0.2
+    train, validation, test = split_dataset_paths(
+        image_paths, mask_paths, train_size, val_size, test_size
+    )
+    assert len(train[0]) == 6
+    assert len(validation[0]) == 2
+    assert len(test[0]) == 2
+
 if __name__ == "__main__":
     test_segmentation_masks_rgb_to_index()
+    test_split_dataset_paths()

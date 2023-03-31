@@ -1,5 +1,7 @@
 import os
+import sys
 import json
+import random
 import numpy as np
 from functools import reduce
 from glob import glob
@@ -161,7 +163,9 @@ def segmentation_masks_rgb_to_index(
         segmentation_masks_categorical[
             np.nonzero((segmentation_masks == rgb).all(axis=-1))
         ] = index
-    np.expand_dims(segmentation_masks_categorical, axis=-1)
+    segmentation_masks_categorical = np.expand_dims(
+        segmentation_masks_categorical, axis=-1
+    )
     return segmentation_masks_categorical
 
 
@@ -187,3 +191,64 @@ def create_weight_map(
     category_weights = n_pixels / (n_categories * counts)
     weight_map = dict(zip(unique, category_weights))
     return weight_map
+
+
+def split_dataset_paths(
+    image_paths: list[str],
+    mask_paths: list[str],
+    train_size: float,
+    validation_size: float,
+    test_size: float
+) -> tuple[list[tuple[str, str]], list[tuple[str, str]], list[tuple[str, str]]]:
+    """Split image and segmentation mask filepaths into train, 
+        validation, and test partitions.
+    
+    Args:
+        image_paths (list (str)) : Filepaths to all images in the 
+            dataset, note these must all be contained in the same 
+            directory.
+        mask_paths (list (str)) : Filepaths to all masks in the dataset,
+            note these must all be contained in the same directory and
+            must have the same filename
+        train_size (float) : Fraction of data to use in the training 
+            set.    
+        validation_size (float) : Fraction of data to use in the
+            validation set.    
+        test_size (float) : Fraction of data to use in the test set.    
+    
+    Returns:
+        train (list (tuple (str, str))) : List of image-mask pairs in 
+            the training set.
+        validation (list (tuple (str, str))) : List of image-mask pairs
+            in the validation set.
+        test (list (tuple (str, str))) : List of image-mask pairs in the
+            test set. 
+    
+    Errors:
+        ValueError : If train_size, validation_size, and test_size do
+            not add up to one.
+        ValueError : If image_paths and mask_paths contain a different
+            number of elements
+    """
+    sum_partitions = train_size + validation_size, test_size
+    if np.allclose(sum_partitions, 1, atol=3*sys.float_info.epsilon):
+        errmsg = f"Paritions should sum to 1 but sum to {sum_partitions}"
+        raise ValueError(errmsg)
+    dataset = list(zip(image_paths, mask_paths, strict=True))
+    length = len(dataset)
+    random.shuffle(dataset)
+    n_train, n_validation, n_test = [
+        int(length*fraction) for fraction in [
+            train_size, validation_size, test_size
+        ]
+    ]
+    train = dataset[0:n_train]
+    validation = dataset[n_train:n_train + n_validation]
+    test = dataset[n_train + n_validation:n_train + n_validation + n_test]
+    train, validation, test = [
+        list(map(list, zip(*data))) for data in [train, validation, test]
+    ]
+    return train, validation, test
+
+
+

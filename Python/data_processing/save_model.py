@@ -55,7 +55,8 @@ def write_class_to_disk(item: object, class_name: str, path: str):
 
 def write_model_to_disk(
         model: tf.keras.Model, 
-        history: tf.keras.callbacks.History, 
+        history: tf.keras.callbacks.History,
+        file_partitions: dict,
         parent_dir_path: str, 
         config: object
     ):
@@ -69,6 +70,9 @@ def write_model_to_disk(
         model (tf.keras.Model) : Model to save.
         history (tf.keras.callbacks.History) : History of training 
             performance parameteres.
+        file_partitions (dict) : Dictionary of partitions: train, 
+            validation, and test mapping to the filepaths form training,
+            validation and testing
         parent_dir_path (str) : Path to parent directory. 
         config (object) : Configuration object used during model 
             training.
@@ -84,9 +88,13 @@ def write_model_to_disk(
     # Save model
     model_save_path = os.path.join(dir_path, "model")
     model.save(model_save_path)
-    # Save Config 
-    config_save_path = os.path.join(dir_path, "config.json")
-    write_class_to_disk(config, "config", config_save_path)
     # Save history
     history_save_path = os.path.join(dir_path, "history.json")
     write_dict_to_disk(history.history, history_save_path)
+    # Save partitions
+    patitions_save_path = os.path.join(dir_path, "partitions.json")
+    write_dict_to_disk(file_partitions, patitions_save_path)
+    # Save Config 
+    config_save_path = os.path.join(dir_path, "config.json")
+    write_class_to_disk(config, "config", config_save_path)
+    
