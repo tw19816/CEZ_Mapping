@@ -27,16 +27,15 @@ class Config:
 
     # Training Parameters
     batch_size = 4
-    epochs = 80
-    train_size = 0.8
-    val_size = 0.1
-    test_size = 0.1
+    epochs = 150
+    train_size = 0.7
+    val_size = 0.15
+    test_size = 0.15
     shuffle_size = 1000
     input_shape = (512, 512, 4)
     channels_low = 32
     channels_high = 512
     middle_repeat = 8
     output_channels = 8     # number of classes
-    background_label = 0
-    expansion_coeff = 2
+    background_label = 0    # class label to ignore during training
     prefetch = tf.data.AUTOTUNE
