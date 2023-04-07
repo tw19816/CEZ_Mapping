@@ -27,6 +27,7 @@ class Config:
     colour_map_path = os.path.join(data_path, "class_categorical.json")
 
     # Training Parameters
+    initial_learning_rate = 0.05
     learning_rate = 0.001
     batch_size = 5
     epochs = 100
