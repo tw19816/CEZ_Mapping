@@ -16,6 +16,7 @@ class Config:
     segmentation_path = os.path.join(
         data_path, "SegmentationClass_categorical_512"
     )
+    partition_path = os.path.join(data_path, "dataset_partition.json")
     # train_path = os.path.join(tfdata_path, "train_data")
     # val_path = os.path.join(tfdata_path, "val_data")
     # test_path = os.path.join(tfdata_path, "test_data")
@@ -26,15 +27,16 @@ class Config:
     colour_map_path = os.path.join(data_path, "class_categorical.json")
 
     # Training Parameters
-    batch_size = 4
-    epochs = 150
+    learning_rate = 0.001
+    batch_size = 5
+    epochs = 100
     train_size = 0.7
     val_size = 0.15
     test_size = 0.15
     shuffle_size = 1000
     input_shape = (512, 512, 4)
     channels_low = 32
-    channels_high = 512
+    channels_high = 256
     middle_repeat = 8
     output_channels = 8     # number of classes
     background_label = 0    # class label to ignore during training

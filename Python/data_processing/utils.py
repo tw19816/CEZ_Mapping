@@ -245,9 +245,13 @@ def split_dataset_paths(
     train = dataset[0:n_train]
     validation = dataset[n_train:n_train + n_validation]
     test = dataset[n_train + n_validation:n_train + n_validation + n_test]
-    train, validation, test = [
+    datasets = [
         list(map(list, zip(*data))) for data in [train, validation, test]
     ]
+    for dataset in datasets:
+        if len(dataset)==0:
+            dataset = [[""], [""]]
+    train, validation, test = datasets
     return train, validation, test
 
 

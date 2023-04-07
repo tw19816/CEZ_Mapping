@@ -109,7 +109,7 @@ def show_predictions(
 # Load model
 ########################################################################
 
-def load_model(path_to_model: str) -> tf.keras.Model:
+def load_model(path_to_model: str, compile: bool = True) -> tf.keras.Model:
     """Loads model from path.
     
     Args:
@@ -118,5 +118,5 @@ def load_model(path_to_model: str) -> tf.keras.Model:
     Returns:
         model (tf.keras.Model) : Model loaded from path.
         """
-    model = tf.keras.models.load_model(path_to_model)
+    model = tf.keras.models.load_model(path_to_model, compile=compile)
     return model

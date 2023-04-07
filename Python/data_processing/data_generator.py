@@ -109,7 +109,7 @@ def generate_image_dataset_from_files(
     dataset = dataset.map(
         load_image_and_mask, num_parallel_calls=tf.data.AUTOTUNE
     )
-    dataset = dataset.batch(batch_size)
+    dataset = dataset.batch(batch_size, drop_remainder=True)
     # Maps images, mask -> images, mask, weights
     dataset = dataset.map(
         make_weight_mask, num_parallel_calls=tf.data.AUTOTUNE
