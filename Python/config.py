@@ -28,6 +28,10 @@ class Config:
 
     # Training Parameters
     initial_learning_rate = 0.05
+    decay_steps = 10000
+    decay_rate = 0.94
+    decay_discrete = True
+
     learning_rate = 0.001
     batch_size = 5
     epochs = 100
