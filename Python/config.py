@@ -9,7 +9,6 @@ class Config:
     root_path = os.path.split(os.path.split(__file__)[0])[0]
     data_path = os.path.join(root_path, "Data", "Priddy_processed")
     test_data_path = os.path.join(root_path, "Test_data")
-    # tfdata_path = os.path.join(data_path, "TFDatasets")
 
     # Image Paths
     image_path = os.path.join(data_path, "JPEGImages_512")
@@ -17,9 +16,6 @@ class Config:
         data_path, "SegmentationClass_categorical_512"
     )
     partition_path = os.path.join(data_path, "dataset_partition.json")
-    # train_path = os.path.join(tfdata_path, "train_data")
-    # val_path = os.path.join(tfdata_path, "val_data")
-    # test_path = os.path.join(tfdata_path, "test_data")
 
     # Model Paths
     model_dir_path = os.path.join(root_path, "Data", "Models")
@@ -28,12 +24,10 @@ class Config:
 
     # Training Parameters
     initial_learning_rate = 0.05
-    decay_steps = 10000
+    decay_steps = 176
     decay_rate = 0.94
     decay_discrete = True
-
-    learning_rate = 0.001
-    batch_size = 5
+    batch_size = 4
     epochs = 100
     train_size = 0.7
     val_size = 0.15
@@ -41,7 +35,7 @@ class Config:
     shuffle_size = 1000
     input_shape = (512, 512, 4)
     channels_low = 32
-    channels_high = 256
+    channels_high = 512
     middle_repeat = 8
     output_channels = 8     # number of classes
     background_label = 0    # class label to ignore during training
