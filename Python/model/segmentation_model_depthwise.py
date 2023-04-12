@@ -1,5 +1,5 @@
 import tensorflow as tf
-from Python.model.aspp import ASPP
+from Python.model.aspp_depthwise import ASPP
 
 def deeplabv3plus(
     input_shape: tuple,
@@ -98,25 +98,25 @@ def deeplabv3plus(
     x = tf.keras.layers.add([x, residual])
 
     residual = tf.keras.layers.Conv2D(
-        512, (1, 1), strides=(2, 2), padding="same", use_bias=False, name="block4_skip"
+        728, (1, 1), strides=(2, 2), padding="same", use_bias=False, name="block4_skip"
     )(x)
     residual = tf.keras.layers.BatchNormalization()(residual)
 
     x = tf.keras.layers.Activation("relu", name="block4_sepconv1_act")(x)
     x = tf.keras.layers.SeparableConv2D(
-        512, (3, 3), padding="same", use_bias=False, name="block4_sepconv1"
+        728, (3, 3), padding="same", use_bias=False, name="block4_sepconv1"
     )(x)
     x = tf.keras.layers.BatchNormalization(name="block4_sepconv1_bn")(
         x
     )
     x = tf.keras.layers.Activation("relu", name="block4_sepconv2_act")(x)
     x = tf.keras.layers.SeparableConv2D(
-        512, (3, 3), padding="same", use_bias=False, name="block4_sepconv2"
+        728, (3, 3), padding="same", use_bias=False, name="block4_sepconv2"
     )(x)
     x = tf.keras.layers.BatchNormalization(name="block4_sepconv2_bn")(x)
     x = tf.keras.layers.Activation("relu", name="block4_sepconv3stride_act")(x)
     x = tf.keras.layers.SeparableConv2D(
-        512, (3, 3), strides=(2, 2), padding="same", name="block4_sepconv3stride"
+        728, (3, 3), strides=(2, 2), padding="same", name="block4_sepconv3stride"
     )(x)
     x = tf.keras.layers.BatchNormalization(name="block4_sepconv3stride_bn")(x)
 
@@ -129,7 +129,7 @@ def deeplabv3plus(
 
         x = tf.keras.layers.Activation("relu", name=prefix + "_sepconv1_act")(x)
         x = tf.keras.layers.SeparableConv2D(
-            512,
+            728,
             (3, 3),
             padding="same",
             use_bias=False,
@@ -140,7 +140,7 @@ def deeplabv3plus(
         )(x)
         x = tf.keras.layers.Activation("relu", name=prefix + "_sepconv2_act")(x)
         x = tf.keras.layers.SeparableConv2D(
-            512,
+            728,
             (3, 3),
             padding="same",
             use_bias=False,
@@ -151,7 +151,7 @@ def deeplabv3plus(
         )(x)
         x = tf.keras.layers.Activation("relu", name=prefix + "_sepconv3_act")(x)
         x = tf.keras.layers.SeparableConv2D(
-            512,
+            728,
             (3, 3),
             padding="same",
             use_bias=False,
@@ -165,25 +165,25 @@ def deeplabv3plus(
 
     # Exit flow
     residual = tf.keras.layers.Conv2D(
-        512, (1, 1), strides=(2, 2), padding="same", use_bias=False
+        1024, (1, 1), strides=(2, 2), padding="same", use_bias=False
     )(x)
     residual = tf.keras.layers.BatchNormalization()(residual)
 
     x = tf.keras.layers.Activation("relu", name="block21_sepconv1_act")(x)
     x = tf.keras.layers.SeparableConv2D(
-        512, (3, 3), padding="same", use_bias=False, name="block21_sepconv1"
+        728, (3, 3), padding="same", use_bias=False, name="block21_sepconv1"
     )(x)
     x = tf.keras.layers.BatchNormalization(
         name="block21_sepconv1_bn"
     )(x)
     x = tf.keras.layers.Activation("relu", name="block21_sepconv2_act")(x)
     x = tf.keras.layers.SeparableConv2D(
-        512, (3, 3), padding="same", use_bias=False, name="block21_sepconv2"
+        1024, (3, 3), padding="same", use_bias=False, name="block21_sepconv2"
     )(x)
     x = tf.keras.layers.BatchNormalization(name="block21_sepconv2_bn")(x)
     x = tf.keras.layers.Activation("relu", name="block21_sepconv3stride_act")(x)
     x = tf.keras.layers.SeparableConv2D(
-        512,
+        1024,
         (3, 3),
         strides=(2, 2),
         padding="same",
@@ -195,12 +195,12 @@ def deeplabv3plus(
     x = tf.keras.layers.add([x, residual])
 
     x = tf.keras.layers.SeparableConv2D(
-        728, (3, 3), padding="same", use_bias=False, name="block22_sepconv1"
+        1536, (3, 3), padding="same", use_bias=False, name="block22_sepconv1"
     )(x)
     x = tf.keras.layers.BatchNormalization(name="block22_sepconv1_bn")(x)
     x = tf.keras.layers.Activation("relu", name="block22_sepconv1_act")(x)
     x = tf.keras.layers.SeparableConv2D(
-        728, (3, 3), padding="same", use_bias=False, name="block22_sepconv2"
+        1536, (3, 3), padding="same", use_bias=False, name="block22_sepconv2"
     )(x)
     x = tf.keras.layers.BatchNormalization(name="block22_sepconv2_bn")(x)
     x = tf.keras.layers.Activation("relu", name="block22_sepconv2_act")(x)
@@ -228,9 +228,9 @@ def deeplabv3plus(
     tmp_target_w = out_low.get_shape().as_list()[2]
 
 
-    out_decode = ASPP(128, (6, 12, 18), name="dec_aspp")(out_backbone)
+    out_decode = ASPP(256, (6, 12, 18), name="dec_aspp")(out_backbone)
     out_decode = tf.keras.layers.Conv2D(
-        128, (1, 1), use_bias=False, name="dec_conv1_high"
+        256, (1, 1), use_bias=False, name="dec_conv1_high"
     )(out_decode)
     out_decode = tf.keras.layers.BatchNormalization(
         name="dec_conv1_high_bn"
@@ -249,12 +249,12 @@ def deeplabv3plus(
     out_decode = tf.keras.layers.concatenate([out_decode, out_low])
 
     out_decode = tf.keras.layers.Conv2D(
-        128, (3, 3), padding="same", use_bias=False, name="dec1_conv1"
+        256, (3, 3), padding="same", use_bias=False, name="dec1_conv1"
     )(out_decode)
     out_decode = tf.keras.layers.BatchNormalization(name="dec1_conv1_bn")(out_decode)
     out_decode = tf.keras.layers.Activation("relu", name="dec1_conv1_act")(out_decode)
     out_decode = tf.keras.layers.Conv2D(
-        128, (3, 3), padding="same", use_bias=False, name="dec1_conv2"
+        256, (3, 3), padding="same", use_bias=False, name="dec1_conv2"
     )(out_decode)
     out_decode = tf.keras.layers.BatchNormalization(name="dec1_conv2_bn")(out_decode)
 
@@ -271,5 +271,5 @@ def deeplabv3plus(
     )(out_decode)
 
     # Create full model
-    model = tf.keras.Model(img_input, out_decode, name="model_v2")
+    model = tf.keras.Model(img_input, out_decode)
     return model

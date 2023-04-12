@@ -15,20 +15,20 @@ class Config:
     segmentation_path = os.path.join(
         data_path, "SegmentationClass_categorical_512"
     )
-    partition_path = os.path.join(data_path, "dataset_partition.json")
+    partition_path = os.path.join(data_path, "dataset_partition_2.json")
 
     # Model Paths
     model_dir_path = os.path.join(root_path, "Data", "Models")
-    weight_map_path = os.path.join(data_path, "weights.json")
+    weight_map_path = os.path.join(data_path, "weights_2.json")
     colour_map_path = os.path.join(data_path, "class_categorical.json")
 
     # Training Parameters
-    initial_learning_rate = 0.05
+    initial_learning_rate = 0.001
     decay_steps = 176
-    decay_rate = 0.94
+    decay_rate = 0.98
     decay_discrete = True
     batch_size = 4
-    epochs = 100
+    epochs = 250
     train_size = 0.7
     val_size = 0.15
     test_size = 0.15

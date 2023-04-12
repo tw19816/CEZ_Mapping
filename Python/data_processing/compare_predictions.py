@@ -3,6 +3,8 @@ import json
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import seaborn as sn
+import pandas as pd
 
 from Python.config import Config
 
@@ -120,3 +122,59 @@ def load_model(path_to_model: str, compile: bool = True) -> tf.keras.Model:
         """
     model = tf.keras.models.load_model(path_to_model, compile=compile)
     return model
+
+
+########################################################################
+# Confusion matrix
+########################################################################
+
+def create_confusion_matrix(
+    model: tf.keras.Model, dataset: tf.data.Dataset, n_classes
+) -> np.ndarray:
+    """Create confusion matrix for a dataset.
+    
+    Args:
+        model (tf.keras.Model) : Model to test.
+        dataset (tf.data.Dataset) : Dataset to compute confusion matrix 
+            from.
+    
+    Returns:
+        confusion_matrix (tf.Tensor)
+    """
+    matrix = np.zeros([n_classes, n_classes], dtype=np.int64)
+    for element in dataset:
+        image_batch = element[0]
+        true_mask = element[1].numpy().copy().flatten()
+        predicted_mask = np.argmax(
+            model.predict(image_batch), axis=-1
+        ).flatten()
+        temp_matrix = tf.math.confusion_matrix(
+            labels=true_mask,
+            predictions=predicted_mask,
+            num_classes=n_classes,
+        ).numpy()
+        matrix += temp_matrix
+    return matrix
+
+
+def plot_confusion_matrix(confusion_matrix: np.ndarray, labels: list) -> None:
+    """Plot a confusion matrix.
+    
+    Args:
+        confusion_matrix (np.nrarray) : The confusion matrix to plot.
+        labels (list (str)) : List of class labels in their categorical 
+            order, i.e. if three classes tree: 0, water: 2, grass: 1 
+            then labels would be [tree, grass, water].
+    """
+    axis_fontsize = 12
+    title_size = 16
+    df_confusion_matrix = pd.DataFrame(
+        confusion_matrix, 
+        index = [label for label in labels],
+        columns = [label for label in labels])
+    plt.figure(figsize = (10,7))
+    sn.heatmap(df_confusion_matrix, annot=True)
+    plt.xlabel("Predicted Classification", fontdict={"size": axis_fontsize})
+    plt.ylabel("Actual Classification", fontdict={"size": axis_fontsize})
+    plt.title("Confusion Matrix", fontdict={"size": title_size})
+    plt.show()
