@@ -173,7 +173,7 @@ def plot_confusion_matrix(confusion_matrix: np.ndarray, labels: list) -> None:
         index = [label for label in labels],
         columns = [label for label in labels])
     plt.figure(figsize = (10,7))
-    sn.heatmap(df_confusion_matrix, annot=True, norm=matplotlib.colors.PowerNorm(0.4))
+    sn.heatmap(df_confusion_matrix, annot=True, norm=matplotlib.colors.PowerNorm(0.48))
     plt.xlabel("Predicted Classification", fontdict={"size": axis_fontsize})
     plt.ylabel("Actual Classification", fontdict={"size": axis_fontsize})
     plt.title("Confusion Matrix", fontdict={"size": title_size})
