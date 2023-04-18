@@ -68,7 +68,8 @@ def compare_model_predictions(
             image (np.ndarray) : Original Image.
             mask_true (np.ndarray) : Segmentation mask.
 
-            """
+    """
+    fontsize = 16
     dataset = tf.data.Dataset.from_tensors(image).batch(1)
     mask_predicted = model.predict(dataset)
     mask_predicted = np.squeeze(mask_predicted)
@@ -77,21 +78,30 @@ def compare_model_predictions(
     n_classes = len(colour_map.keys())
     cmap = plt.cm.rainbow
     norm = matplotlib.colors.BoundaryNorm(np.arange(-0.5, n_classes + 0.5, 1), cmap.N)
-    fig = plt.figure(figsize=[16, 6])
-    ax_image = fig.add_axes([0.0, 0.15, 0.3, 0.7], title="Original Image")
+    fig = plt.figure(figsize=[16, 7])
+    ax_image = fig.add_axes([0.0, 0.1, 0.32, 0.8])
+    ax_image.set_title(label="Original Image", fontdict={"size": fontsize})
     ax_image = remove_axis_labels(ax_image)
-    ax_mask_true = fig.add_axes([0.325, 0.15, 0.3, 0.7], title="True Mask")
+    ax_mask_true = fig.add_axes([0.34, 0.1, 0.32, 0.8])
+    ax_mask_true.set_title(label="True Mask", fontdict={"size": fontsize})
     ax_mask_true = remove_axis_labels(ax_mask_true)
-    ax_mask_pred = fig.add_axes([0.65, 0.05, 0.3, 0.9], title="Predicted Mask")
+    ax_mask_pred = fig.add_axes([0.68, 0.1, 0.32, 0.8])
+    ax_mask_pred.set_title(label="Predicted Mask", fontdict={"size": fontsize})
     ax_mask_pred = remove_axis_labels(ax_mask_pred)
+    ax_colourbar = fig.add_axes([0.0, 0.0, 1, 0.05])
     ax_image.imshow(image)
     im_true = ax_mask_true.imshow(mask_true, cmap=cmap, norm=norm)
     im_pred = ax_mask_pred.imshow(mask_predicted, cmap=cmap, norm=norm)
     colour_map = load_colour_map(Config.colour_map_path)
     formatter = plt.FuncFormatter(lambda val, loc: colour_map.get(val))
-    fig.colorbar(
-        im_pred, ticks=list(range(Config.output_channels)), format=formatter
+    colourbar = fig.colorbar(
+        im_pred, 
+        ticks=list(range(Config.output_channels)), 
+        format=formatter,
+        cax=ax_colourbar,
+        location="bottom"
     )
+    colourbar.ax.tick_params(labelsize=fontsize)
     plt.show()
 
 def show_predictions(
