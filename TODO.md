@@ -33,4 +33,3 @@
         * original image
         * originial image overlayed with segmentation mask
         * segmentation mask on black background
-
